@@ -15,6 +15,7 @@ members = [
     "models/group",
     "models/spacer",
     "models/star",
+    "models/union",
 
     "tools/export-validator",
     "tools/release-operator",

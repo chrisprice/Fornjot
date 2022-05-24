@@ -39,7 +39,8 @@ impl Movement {
 
             if let Some(focus_point) = self.focus_point.0 {
                 let d1 = Point::distance(&camera.position(), &cursor);
-                let d2 = Point::distance(&camera.position(), &focus_point);
+                let d2 =
+                    Point::distance(&camera.position(), &focus_point.center);
 
                 let diff = (cursor - previous) * d2 / d1;
                 let offset = camera.camera_to_model().transform_vector(&diff);

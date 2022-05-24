@@ -216,6 +216,8 @@ pub fn run(
                 &shape.mesh,
             );
 
+            renderer.update_focus_point(focus_point);
+
             input_handler.handle_event(
                 event,
                 window.size(),

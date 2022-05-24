@@ -35,7 +35,7 @@ pub struct Geometry {
 }
 
 impl Geometry {
-    fn new(
+    pub fn new(
         device: &wgpu::Device,
         vertices: &[Vertex],
         indices: &[u32],

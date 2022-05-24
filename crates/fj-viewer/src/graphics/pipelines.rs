@@ -11,6 +11,7 @@ pub struct Pipelines {
     pub model: Pipeline,
     pub mesh: Pipeline,
     pub lines: Pipeline,
+    pub focus_point: Pipeline,
 }
 
 impl Pipelines {
@@ -36,6 +37,7 @@ impl Pipelines {
                 wgpu::PrimitiveTopology::TriangleList,
                 wgpu::PolygonMode::Fill,
                 color_format,
+                Some(DEPTH_FORMAT),
             ),
             mesh: Pipeline::new(
                 device,
@@ -44,6 +46,7 @@ impl Pipelines {
                 wgpu::PrimitiveTopology::TriangleList,
                 wgpu::PolygonMode::Line,
                 color_format,
+                Some(DEPTH_FORMAT),
             ),
             lines: Pipeline::new(
                 device,
@@ -52,6 +55,16 @@ impl Pipelines {
                 wgpu::PrimitiveTopology::LineList,
                 wgpu::PolygonMode::Line,
                 color_format,
+                Some(DEPTH_FORMAT),
+            ),
+            focus_point: Pipeline::new(
+                device,
+                &pipeline_layout,
+                shaders.model(),
+                wgpu::PrimitiveTopology::TriangleList,
+                wgpu::PolygonMode::Fill,
+                color_format,
+                None,
             ),
         }
     }
@@ -68,6 +81,7 @@ impl Pipeline {
         topology: wgpu::PrimitiveTopology,
         polygon_mode: wgpu::PolygonMode,
         color_format: wgpu::TextureFormat,
+        depth_format: Option<wgpu::TextureFormat>,
     ) -> Self {
         let pipeline =
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -95,17 +109,19 @@ impl Pipeline {
                     polygon_mode,
                     conservative: false,
                 },
-                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: DEPTH_FORMAT,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::LessEqual,
-                    stencil: wgpu::StencilState {
-                        front: wgpu::StencilFaceState::IGNORE,
-                        back: wgpu::StencilFaceState::IGNORE,
-                        read_mask: 0,
-                        write_mask: 0,
-                    },
-                    bias: wgpu::DepthBiasState::default(),
+                depth_stencil: depth_format.map(|depth_format| {
+                    wgpu::DepthStencilState {
+                        format: depth_format,
+                        depth_write_enabled: true,
+                        depth_compare: wgpu::CompareFunction::LessEqual,
+                        stencil: wgpu::StencilState {
+                            front: wgpu::StencilFaceState::IGNORE,
+                            back: wgpu::StencilFaceState::IGNORE,
+                            read_mask: 0,
+                            write_mask: 0,
+                        },
+                        bias: wgpu::DepthBiasState::default(),
+                    }
                 }),
                 multisample: wgpu::MultisampleState {
                     count: 1,

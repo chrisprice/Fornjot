@@ -111,7 +111,8 @@ impl Zoom {
         // Limit current speed, if close to focus point and zooming in.
         if let Some(focus_point) = focus_point.0 {
             if self.last_direction == Direction::In {
-                let d = Point::distance(&focus_point, &camera.position());
+                let d =
+                    Point::distance(&focus_point.center, &camera.position());
                 self.current_speed =
                     -f64::min(-self.current_speed, d.into_f64() / 8.);
             }

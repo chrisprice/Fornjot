@@ -7,15 +7,27 @@ pub struct Drawables<'r> {
     pub model: Drawable<'r>,
     pub mesh: Drawable<'r>,
     pub lines: Drawable<'r>,
+    pub focus_point: Drawable<'r>,
 }
 
 impl<'r> Drawables<'r> {
-    pub fn new(geometries: &'r Geometries, pipelines: &'r Pipelines) -> Self {
+    pub fn new(
+        geometries: &'r Geometries,
+        focus_point_geometry: &'r Geometry,
+        pipelines: &'r Pipelines,
+    ) -> Self {
         let model = Drawable::new(&geometries.mesh, &pipelines.model);
         let mesh = Drawable::new(&geometries.mesh, &pipelines.mesh);
         let lines = Drawable::new(&geometries.lines, &pipelines.lines);
+        let focus_point =
+            Drawable::new(focus_point_geometry, &pipelines.focus_point);
 
-        Self { model, mesh, lines }
+        Self {
+            model,
+            mesh,
+            lines,
+            focus_point,
+        }
     }
 }
 
@@ -33,7 +45,7 @@ impl<'r> Drawable<'r> {
         &self,
         encoder: &mut wgpu::CommandEncoder,
         color_view: &wgpu::TextureView,
-        depth_view: &wgpu::TextureView,
+        depth_view: Option<&wgpu::TextureView>,
         bind_group: &wgpu::BindGroup,
     ) {
         let mut render_pass =
@@ -47,7 +59,7 @@ impl<'r> Drawable<'r> {
                         store: true,
                     },
                 }],
-                depth_stencil_attachment: Some(
+                depth_stencil_attachment: depth_view.map(|depth_view| {
                     wgpu::RenderPassDepthStencilAttachment {
                         view: depth_view,
                         depth_ops: Some(wgpu::Operations {
@@ -55,8 +67,8 @@ impl<'r> Drawable<'r> {
                             store: true,
                         }),
                         stencil_ops: None,
-                    },
-                ),
+                    }
+                }),
             });
 
         render_pass.set_pipeline(&self.pipeline.0);

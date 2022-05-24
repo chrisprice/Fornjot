@@ -156,13 +156,19 @@ impl Camera {
             );
 
             if let Some(t) = t {
-                if t <= min_t.unwrap_or(t) {
-                    min_t = Some(t);
+                if t <= min_t.map(|(t, _)| t).unwrap_or(t) {
+                    let triangle: Triangle<3> = triangle.points.into();
+                    min_t = Some((t, triangle));
                 }
             }
         }
 
-        FocusPoint(min_t.map(|t| origin + dir * t))
+        min_t.map_or(FocusPoint::none(), |(t, triangle)| {
+            FocusPoint(Some(FocusPointInner {
+                center: origin + dir * t,
+                triangle,
+            }))
+        })
     }
 
     /// Access the transform from camera to model space.
@@ -227,7 +233,17 @@ impl Camera {
 ///
 /// Such a point might or might not exist, depending on whether the cursor is
 /// pointing at the model or not.
-pub struct FocusPoint(pub Option<Point<3>>);
+#[derive(Clone, Copy)]
+pub struct FocusPoint(pub Option<FocusPointInner>);
+
+/// The center point and the associated model triangle
+#[derive(Clone, Copy)]
+pub struct FocusPointInner {
+    /// The center point
+    pub center: Point<3>,
+    /// The model triangle to which the center point belongs
+    pub triangle: Triangle<3>,
+}
 
 impl FocusPoint {
     /// Construct the "none" instance of `FocusPoint`

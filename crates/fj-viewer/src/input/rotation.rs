@@ -26,8 +26,11 @@ impl Rotation {
 
     pub fn apply(&self, diff_x: f64, diff_y: f64, camera: &mut Camera) {
         if self.active {
-            let rotate_around: Vector<3> =
-                self.focus_point.0.unwrap_or_else(Point::origin).coords;
+            let rotate_around: Vector<3> = self
+                .focus_point
+                .0
+                .map_or(Point::origin(), |focus_point| focus_point.center)
+                .coords;
 
             let f = 0.005;
 

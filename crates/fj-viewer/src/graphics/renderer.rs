@@ -1,5 +1,6 @@
 use std::{io, mem::size_of};
 
+use fj_interop::mesh::Mesh;
 use fj_math::{Aabb, Point};
 use thiserror::Error;
 use tracing::debug;
@@ -7,12 +8,21 @@ use wgpu::util::DeviceExt as _;
 use wgpu_glyph::ab_glyph::InvalidFont;
 use winit::dpi::PhysicalSize;
 
-use crate::{camera::Camera, window::Window};
+use crate::{
+    camera::{Camera, FocusPoint, FocusPointInner},
+    window::Window,
+};
 
 use super::{
-    config_ui::ConfigUi, draw_config::DrawConfig, drawables::Drawables,
-    geometries::Geometries, pipelines::Pipelines, transform::Transform,
-    uniforms::Uniforms, vertices::Vertices, DEPTH_FORMAT,
+    config_ui::ConfigUi,
+    draw_config::DrawConfig,
+    drawables::Drawables,
+    geometries::{Geometries, Geometry},
+    pipelines::Pipelines,
+    transform::Transform,
+    uniforms::Uniforms,
+    vertices::Vertices,
+    DEPTH_FORMAT,
 };
 
 /// Graphics rendering state and target abstraction
@@ -29,6 +39,7 @@ pub struct Renderer {
     bind_group: wgpu::BindGroup,
 
     geometries: Geometries,
+    focus_point_geometry: Geometry,
     pipelines: Pipelines,
 
     config_ui: ConfigUi,
@@ -145,6 +156,7 @@ impl Renderer {
                 max: Point::from([0.0, 0.0, 0.0]),
             },
         );
+        let focus_point_geometry = Geometry::new(&device, &[], &[]);
         let pipelines =
             Pipelines::new(&device, &bind_group_layout, color_format);
 
@@ -162,6 +174,7 @@ impl Renderer {
             bind_group,
 
             geometries,
+            focus_point_geometry,
             pipelines,
 
             config_ui,
@@ -176,6 +189,44 @@ impl Renderer {
         aabb: Aabb<3>,
     ) {
         self.geometries = Geometries::new(&self.device, &mesh, &lines, aabb);
+    }
+
+    /// Updates the geometry of the focus point.
+    pub fn update_focus_point(&mut self, focus_point: FocusPoint) {
+        self.focus_point_geometry =
+            if let FocusPoint(Some(FocusPointInner { center, triangle })) =
+                focus_point
+            {
+                let [a, b, _] = triangle.points();
+                let a = (a - b).normalize();
+                let b = triangle.normal();
+
+                let mut mesh = Mesh::new();
+                mesh.push_triangle(
+                    [
+                        (center + a).to_xyz(),
+                        (center - a).to_xyz(),
+                        (center + a.cross(&b)).to_xyz(),
+                    ],
+                    [0, 0, 0, 255],
+                );
+                mesh.push_triangle(
+                    [
+                        (center - a).to_xyz(),
+                        (center + a).to_xyz(),
+                        (center - a.cross(&b)).to_xyz(),
+                    ],
+                    [0, 0, 0, 255],
+                );
+                let vertices: Vertices = (&mesh).into();
+                Geometry::new(
+                    &self.device,
+                    vertices.vertices(),
+                    vertices.indices(),
+                )
+            } else {
+                Geometry::new(&self.device, &[], &[])
+            }
     }
 
     /// Resizes the render surface.
@@ -223,13 +274,17 @@ impl Renderer {
 
         self.clear_views(&mut encoder, &color_view);
 
-        let drawables = Drawables::new(&self.geometries, &self.pipelines);
+        let drawables = Drawables::new(
+            &self.geometries,
+            &self.focus_point_geometry,
+            &self.pipelines,
+        );
 
         if config.draw_model {
             drawables.model.draw(
                 &mut encoder,
                 &color_view,
-                &self.depth_view,
+                Some(&self.depth_view),
                 &self.bind_group,
             );
         }
@@ -237,7 +292,7 @@ impl Renderer {
             drawables.mesh.draw(
                 &mut encoder,
                 &color_view,
-                &self.depth_view,
+                Some(&self.depth_view),
                 &self.bind_group,
             );
         }
@@ -245,10 +300,17 @@ impl Renderer {
             drawables.lines.draw(
                 &mut encoder,
                 &color_view,
-                &self.depth_view,
+                Some(&self.depth_view),
                 &self.bind_group,
             );
         }
+
+        drawables.focus_point.draw(
+            &mut encoder,
+            &color_view,
+            None,
+            &self.bind_group,
+        );
 
         self.config_ui
             .draw(

@@ -100,10 +100,11 @@ impl Handler {
         button: MouseButton,
         state: ElementState,
         focus_point: FocusPoint,
+        camera: &Camera,
     ) {
         match (button, state) {
             (MouseButton::Left, ElementState::Pressed) => {
-                self.rotation.start(focus_point);
+                self.rotation.start(camera, focus_point);
             }
             (MouseButton::Left, ElementState::Released) => {
                 self.rotation.stop();

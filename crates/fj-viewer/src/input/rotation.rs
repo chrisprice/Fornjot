@@ -5,6 +5,8 @@ use crate::camera::{Camera, FocusPoint};
 pub struct Rotation {
     active: bool,
     focus_point: FocusPoint,
+    active_rotation: Transform,
+    base_rotation: Transform,
 }
 
 impl Rotation {
@@ -12,19 +14,23 @@ impl Rotation {
         Self {
             active: false,
             focus_point: FocusPoint::none(),
+            active_rotation: Transform::identity(),
+            base_rotation: Transform::identity(),
         }
     }
 
-    pub fn start(&mut self, focus_point: FocusPoint) {
+    pub fn start(&mut self, camera: &Camera, focus_point: FocusPoint) {
         self.active = true;
         self.focus_point = focus_point;
+        self.base_rotation = camera.rotation;
+        self.active_rotation = Transform::identity();
     }
 
     pub fn stop(&mut self) {
         self.active = false;
     }
 
-    pub fn apply(&self, diff_x: f64, diff_y: f64, camera: &mut Camera) {
+    pub fn apply(&mut self, diff_x: f64, diff_y: f64, camera: &mut Camera) {
         if self.active {
             let rotate_around: Vector<3> = self
                 .focus_point
@@ -44,9 +50,11 @@ impl Rotation {
             let rot_x = Transform::rotation(aa_x);
             let rot_y = Transform::rotation(aa_y);
 
-            let inv = trans.inverse();
-
-            camera.rotation = trans * rot_y * rot_x * inv * camera.rotation;
+            self.active_rotation = self.active_rotation * rot_x * rot_y;
+            camera.rotation = self.base_rotation
+                * trans
+                * self.active_rotation
+                * trans.inverse();
         }
     }
 }

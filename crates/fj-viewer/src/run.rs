@@ -106,6 +106,7 @@ pub fn run(
                         button,
                         state,
                         focus_point,
+                        camera,
                     );
                 }
             }

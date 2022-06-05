@@ -2,6 +2,8 @@ use fj_math::{Point, Transform, Vector};
 
 use crate::camera::{Camera, FocusPoint};
 
+use super::handler::Behavior;
+
 pub struct Rotation {
     active: bool,
     focus_point: Option<FocusPoint>,
@@ -54,6 +56,12 @@ impl Rotation {
             camera.rotation = transform.extract_rotation();
             camera.translation = transform.extract_translation();
         }
+    }
+}
+
+impl Behavior for Rotation {
+    fn is_active(&self) -> bool {
+        self.active
     }
 }
 

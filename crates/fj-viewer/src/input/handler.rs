@@ -19,7 +19,6 @@ use super::{
 pub struct Handler {
     cursor: Option<Position>,
     focus_point: Option<FocusPoint>,
-    focus_point_locked: bool,
 
     movement: Movement,
     rotation: Rotation,
@@ -39,7 +38,6 @@ impl Handler {
         Self {
             cursor: None,
             focus_point: None,
-            focus_point_locked: false,
 
             movement: Movement::new(),
             rotation: Rotation::new(),
@@ -67,7 +65,10 @@ impl Handler {
         camera: &mut Camera,
         actions: &mut Actions,
     ) {
-        if !self.focus_point_locked {
+        if !(self.movement.is_active()
+            || self.rotation.is_active()
+            || self.zoom.is_active())
+        {
             self.focus_point =
                 camera.focus_point(screen_size, self.cursor(), mesh);
         }
@@ -97,11 +98,9 @@ impl Handler {
             }
 
             Event::Key(Key::MouseLeft, KeyState::Pressed) => {
-                self.focus_point_locked = true;
                 self.rotation.start(self.focus_point);
             }
             Event::Key(Key::MouseLeft, KeyState::Released) => {
-                self.focus_point_locked = false;
                 self.rotation.stop();
             }
             Event::Key(Key::MouseRight, KeyState::Pressed) => {
@@ -140,6 +139,14 @@ impl Handler {
                 -self.zoom.speed(),
             ]));
     }
+}
+
+/// Converts raw input events into higher level interactions.
+pub trait Behavior {
+    /// Signals that this behavior is currently active.
+    ///
+    /// Used to lock focus during interactions.
+    fn is_active(&self) -> bool;
 }
 
 /// Intermediate input state container

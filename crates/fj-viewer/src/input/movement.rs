@@ -5,7 +5,10 @@ use crate::{
     screen::{Position, Size},
 };
 
+use super::handler::Behavior;
+
 pub struct Movement {
+    active: bool,
     focus_point: Option<FocusPoint>,
     cursor: Option<Position>,
 }
@@ -13,6 +16,7 @@ pub struct Movement {
 impl Movement {
     pub fn new() -> Self {
         Self {
+            active: false,
             focus_point: None,
             cursor: None,
         }
@@ -23,11 +27,13 @@ impl Movement {
         focus_point: Option<FocusPoint>,
         cursor: Option<Position>,
     ) {
+        self.active = true;
         self.focus_point = focus_point;
         self.cursor = cursor;
     }
 
     pub fn stop(&mut self) {
+        self.active = false;
         self.focus_point = None;
     }
 
@@ -59,5 +65,11 @@ impl Movement {
         }
 
         self.cursor = cursor;
+    }
+}
+
+impl Behavior for Movement {
+    fn is_active(&self) -> bool {
+        self.active
     }
 }

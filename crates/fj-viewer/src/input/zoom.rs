@@ -7,6 +7,8 @@ use fj_math::Point;
 
 use crate::camera::{Camera, FocusPoint};
 
+use super::handler::Behavior;
+
 pub struct Zoom {
     events: VecDeque<(Instant, f64)>,
 
@@ -131,6 +133,12 @@ impl Zoom {
     /// Access the current zoom speed
     pub fn speed(&self) -> f64 {
         self.current_speed
+    }
+}
+
+impl Behavior for Zoom {
+    fn is_active(&self) -> bool {
+        self.current_speed != 0.
     }
 }
 

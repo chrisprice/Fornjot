@@ -76,7 +76,7 @@ impl Zoom {
         &mut self,
         now: Instant,
         delta_t: f64,
-        focus_point: FocusPoint,
+        focus_point: Option<FocusPoint>,
         camera: &Camera,
     ) {
         self.target_speed = self.events.iter().map(|(_, event)| event).sum();
@@ -109,7 +109,7 @@ impl Zoom {
         self.last_direction = Direction::from(self.current_speed);
 
         // Limit current speed, if close to focus point and zooming in.
-        if let Some(focus_point) = focus_point.0 {
+        if let Some(focus_point) = focus_point {
             if self.last_direction == Direction::In {
                 let d =
                     Point::distance(&focus_point.center, &camera.position());

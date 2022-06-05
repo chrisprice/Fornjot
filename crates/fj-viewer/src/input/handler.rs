@@ -18,7 +18,7 @@ use super::{
 /// Takes user input and applies them to application state.
 pub struct Handler {
     cursor: Option<Position>,
-    focus_point: FocusPoint,
+    focus_point: Option<FocusPoint>,
     focus_point_locked: bool,
 
     movement: Movement,
@@ -38,7 +38,7 @@ impl Handler {
     pub fn new(now: Instant) -> Self {
         Self {
             cursor: None,
-            focus_point: FocusPoint::none(),
+            focus_point: None,
             focus_point_locked: false,
 
             movement: Movement::new(),
@@ -53,7 +53,7 @@ impl Handler {
     }
 
     /// Returns the focus point.
-    pub fn focus_point(&self) -> FocusPoint {
+    pub fn focus_point(&self) -> Option<FocusPoint> {
         self.focus_point
     }
 

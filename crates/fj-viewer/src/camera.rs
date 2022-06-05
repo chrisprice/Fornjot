@@ -132,10 +132,10 @@ impl Camera {
         size: Size,
         cursor: Option<Position>,
         mesh: &Mesh<fj_math::Point<3>>,
-    ) -> FocusPoint {
+    ) -> Option<FocusPoint> {
         let cursor = match cursor {
             Some(cursor) => cursor,
-            None => return FocusPoint::none(),
+            None => return None,
         };
 
         // Transform camera and cursor positions to model space.
@@ -161,11 +161,9 @@ impl Camera {
             }
         }
 
-        min_t.map_or(FocusPoint::none(), |(t, triangle)| {
-            FocusPoint(Some(FocusPointInner {
-                center: origin + dir * t,
-                triangle,
-            }))
+        min_t.map(|(t, triangle)| FocusPoint {
+            center: origin + dir * t,
+            triangle,
         })
     }
 
@@ -232,22 +230,9 @@ impl Camera {
 /// Such a point might or might not exist, depending on whether the cursor is
 /// pointing at the model or not.
 #[derive(Clone, Copy)]
-pub struct FocusPoint(pub Option<FocusPointInner>);
-
-/// The center point and the associated model triangle
-#[derive(Clone, Copy)]
-pub struct FocusPointInner {
+pub struct FocusPoint {
     /// The center point
     pub center: Point<3>,
     /// The model triangle to which the center point belongs
     pub triangle: Triangle<3>,
-}
-
-impl FocusPoint {
-    /// Construct the "none" instance of `FocusPoint`
-    ///
-    /// This instance represents the case that no focus point exists.
-    pub fn none() -> Self {
-        Self(None)
-    }
 }

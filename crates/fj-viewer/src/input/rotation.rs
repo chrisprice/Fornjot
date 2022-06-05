@@ -4,18 +4,18 @@ use crate::camera::{Camera, FocusPoint};
 
 pub struct Rotation {
     active: bool,
-    focus_point: FocusPoint,
+    focus_point: Option<FocusPoint>,
 }
 
 impl Rotation {
     pub fn new() -> Self {
         Self {
             active: false,
-            focus_point: FocusPoint::none(),
+            focus_point: None,
         }
     }
 
-    pub fn start(&mut self, focus_point: FocusPoint) {
+    pub fn start(&mut self, focus_point: Option<FocusPoint>) {
         self.active = true;
         self.focus_point = focus_point;
     }
@@ -28,7 +28,6 @@ impl Rotation {
         if self.active {
             let rotate_around: Vector<3> = self
                 .focus_point
-                .0
                 .map_or(Point::origin(), |focus_point| focus_point.center)
                 .coords;
 

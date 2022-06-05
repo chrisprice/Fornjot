@@ -8,7 +8,7 @@ use wgpu::util::DeviceExt as _;
 use wgpu_glyph::ab_glyph::InvalidFont;
 
 use crate::{
-    camera::{Camera, FocusPoint, FocusPointInner},
+    camera::{Camera, FocusPoint},
     screen::{Screen, Size},
 };
 
@@ -177,41 +177,38 @@ impl Renderer {
     }
 
     /// Updates the geometry of the focus point.
-    pub fn update_focus_point(&mut self, focus_point: FocusPoint) {
-        self.focus_point_geometry =
-            if let FocusPoint(Some(FocusPointInner { center, triangle })) =
-                focus_point
-            {
-                let [a, b, _] = triangle.points();
-                let a = (a - b).normalize();
-                let b = triangle.normal();
+    pub fn update_focus_point(&mut self, focus_point: Option<FocusPoint>) {
+        self.focus_point_geometry = if let Some(FocusPoint {
+            center,
+            triangle,
+        }) = focus_point
+        {
+            let [a, b, _] = triangle.points();
+            let a = (a - b).normalize();
+            let b = triangle.normal();
 
-                let mut mesh = Mesh::new();
-                mesh.push_triangle(
-                    [
-                        (center + a).to_xyz(),
-                        (center - a).to_xyz(),
-                        (center + a.cross(&b)).to_xyz(),
-                    ],
-                    [0, 0, 0, 255],
-                );
-                mesh.push_triangle(
-                    [
-                        (center - a).to_xyz(),
-                        (center + a).to_xyz(),
-                        (center - a.cross(&b)).to_xyz(),
-                    ],
-                    [0, 0, 0, 255],
-                );
-                let vertices: Vertices = (&mesh).into();
-                Geometry::new(
-                    &self.device,
-                    vertices.vertices(),
-                    vertices.indices(),
-                )
-            } else {
-                Geometry::new(&self.device, &[], &[])
-            }
+            let mut mesh = Mesh::new();
+            mesh.push_triangle(
+                [
+                    (center + a).to_xyz(),
+                    (center - a).to_xyz(),
+                    (center + a.cross(&b)).to_xyz(),
+                ],
+                [0, 0, 0, 255],
+            );
+            mesh.push_triangle(
+                [
+                    (center - a).to_xyz(),
+                    (center + a).to_xyz(),
+                    (center - a.cross(&b)).to_xyz(),
+                ],
+                [0, 0, 0, 255],
+            );
+            let vertices: Vertices = (&mesh).into();
+            Geometry::new(&self.device, vertices.vertices(), vertices.indices())
+        } else {
+            Geometry::new(&self.device, &[], &[])
+        }
     }
 
     /// Resizes the render surface.

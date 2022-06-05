@@ -45,7 +45,7 @@ impl<'r> Drawable<'r> {
         &self,
         encoder: &mut wgpu::CommandEncoder,
         color_view: &wgpu::TextureView,
-        depth_view: Option<&wgpu::TextureView>,
+        depth_view: &wgpu::TextureView,
         bind_group: &wgpu::BindGroup,
     ) {
         let mut render_pass =
@@ -59,7 +59,7 @@ impl<'r> Drawable<'r> {
                         store: true,
                     },
                 }],
-                depth_stencil_attachment: depth_view.map(|depth_view| {
+                depth_stencil_attachment: Some(
                     wgpu::RenderPassDepthStencilAttachment {
                         view: depth_view,
                         depth_ops: Some(wgpu::Operations {
@@ -67,8 +67,8 @@ impl<'r> Drawable<'r> {
                             store: true,
                         }),
                         stencil_ops: None,
-                    }
-                }),
+                    },
+                ),
             });
 
         render_pass.set_pipeline(&self.pipeline.0);

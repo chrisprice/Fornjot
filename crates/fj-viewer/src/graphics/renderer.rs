@@ -266,7 +266,7 @@ impl Renderer {
             drawables.model.draw(
                 &mut encoder,
                 &color_view,
-                Some(&self.depth_view),
+                &self.depth_view,
                 &self.bind_group,
             );
         }
@@ -274,7 +274,7 @@ impl Renderer {
             drawables.mesh.draw(
                 &mut encoder,
                 &color_view,
-                Some(&self.depth_view),
+                &self.depth_view,
                 &self.bind_group,
             );
         }
@@ -282,7 +282,7 @@ impl Renderer {
             drawables.lines.draw(
                 &mut encoder,
                 &color_view,
-                Some(&self.depth_view),
+                &self.depth_view,
                 &self.bind_group,
             );
         }
@@ -290,7 +290,7 @@ impl Renderer {
         drawables.focus_point.draw(
             &mut encoder,
             &color_view,
-            None,
+            &self.depth_view,
             &self.bind_group,
         );
 

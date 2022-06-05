@@ -162,7 +162,8 @@ impl Camera {
         }
 
         min_t.map(|(t, triangle)| FocusPoint {
-            center: origin + dir * t,
+            // slightly bias the center closer to the camera to prevent z-fighting
+            center: origin + dir * (t * 0.999),
             triangle,
         })
     }

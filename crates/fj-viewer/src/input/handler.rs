@@ -18,6 +18,8 @@ use super::{
 /// Takes user input and applies them to application state.
 pub struct Handler {
     cursor: Option<Position>,
+    focus_point: FocusPoint,
+    focus_point_locked: bool,
 
     movement: Movement,
     rotation: Rotation,
@@ -36,6 +38,8 @@ impl Handler {
     pub fn new(now: Instant) -> Self {
         Self {
             cursor: None,
+            focus_point: FocusPoint::none(),
+            focus_point_locked: false,
 
             movement: Movement::new(),
             rotation: Rotation::new(),
@@ -48,16 +52,26 @@ impl Handler {
         self.cursor
     }
 
+    /// Returns the focus point.
+    pub fn focus_point(&self) -> FocusPoint {
+        self.focus_point
+    }
+
     /// Handle an input event
     pub fn handle_event(
         &mut self,
         event: Event,
         screen_size: Size,
-        focus_point: FocusPoint,
         now: Instant,
+        mesh: &Mesh<Point<3>>,
         camera: &mut Camera,
         actions: &mut Actions,
     ) {
+        if !self.focus_point_locked {
+            self.focus_point =
+                camera.focus_point(screen_size, self.cursor(), mesh);
+        }
+
         match event {
             Event::CursorMoved(position) => {
                 if let Some(previous) = self.cursor {
@@ -83,13 +97,15 @@ impl Handler {
             }
 
             Event::Key(Key::MouseLeft, KeyState::Pressed) => {
-                self.rotation.start(focus_point);
+                self.focus_point_locked = true;
+                self.rotation.start(self.focus_point);
             }
             Event::Key(Key::MouseLeft, KeyState::Released) => {
+                self.focus_point_locked = false;
                 self.rotation.stop();
             }
             Event::Key(Key::MouseRight, KeyState::Pressed) => {
-                self.movement.start(focus_point, self.cursor);
+                self.movement.start(self.focus_point, self.cursor);
             }
             Event::Key(Key::MouseRight, KeyState::Released) => {
                 self.movement.stop();

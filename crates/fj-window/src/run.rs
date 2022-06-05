@@ -210,22 +210,16 @@ pub fn run(
         if let (Some(event), Some(shape), Some(camera)) =
             (event, &shape, &mut camera)
         {
-            let focus_point = camera.focus_point(
-                window.size(),
-                input_handler.cursor(),
-                &shape.mesh,
-            );
-
-            renderer.update_focus_point(focus_point);
-
             input_handler.handle_event(
                 event,
                 window.size(),
-                focus_point,
                 now,
+                &shape.mesh,
                 camera,
                 &mut actions,
             );
+
+            renderer.update_focus_point(input_handler.focus_point());
         }
 
         if actions.exit {

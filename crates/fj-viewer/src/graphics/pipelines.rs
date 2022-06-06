@@ -60,7 +60,7 @@ impl Pipelines {
             focus_point: Pipeline::new(
                 device,
                 &pipeline_layout,
-                shaders.model(),
+                shaders.circles(),
                 wgpu::PrimitiveTopology::TriangleList,
                 wgpu::PolygonMode::Fill,
                 color_format,

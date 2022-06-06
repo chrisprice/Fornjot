@@ -35,6 +35,13 @@ impl Shaders {
             frag_entry: "frag_lines",
         }
     }
+
+    pub fn circles(&self) -> Shader {
+        Shader {
+            module: &self.0,
+            frag_entry: "frag_circles",
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

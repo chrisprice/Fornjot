@@ -183,18 +183,23 @@ impl Renderer {
             triangle,
         }) = focus_point
         {
+            let size = 1. / 8.;
             let [a, b, _] = triangle.points();
-            let a = (a - b).normalize();
+            let a = (a - b).normalize() * size;
             let b = triangle.normal();
 
             let mut mesh = Mesh::new();
+            // use a different colour to disable indexed vertices for the shared points
+            // the normal calculation when converting the Mesh to Vertices can introduce
+            // rounding errors causing instability in whether indexed vertices are used
+            // or not which leads to issues in the shader.
             mesh.push_triangle(
                 [
                     (center + a).to_xyz(),
                     (center - a).to_xyz(),
                     (center + a.cross(&b)).to_xyz(),
                 ],
-                [0, 0, 0, 255],
+                [1, 0, 0, 255],
             );
             mesh.push_triangle(
                 [
@@ -202,7 +207,7 @@ impl Renderer {
                     (center + a).to_xyz(),
                     (center - a.cross(&b)).to_xyz(),
                 ],
-                [0, 0, 0, 255],
+                [0, 1, 0, 255],
             );
             let vertices: Vertices = (&mesh).into();
             Geometry::new(&self.device, vertices.vertices(), vertices.indices())
